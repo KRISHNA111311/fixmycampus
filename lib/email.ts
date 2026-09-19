@@ -57,7 +57,8 @@ type AlertIssue = { issueCode: string; title: string; location: string; severity
 export const templates = {
   otp: (code: string) => wrap(`<h2 style="margin:0 0 8px">Your FixMyCampus code</h2><p style="margin:0 0 16px;color:#334155">Enter this 6-digit code. It expires in 10 minutes.</p><div style="font-size:32px;font-weight:700;letter-spacing:8px;background:#f1f5f9;padding:16px 20px;border-radius:12px;text-align:center">${code}</div>`),
   newIssue: (i: any) => generateIssueEmailHtml(i),
-  criticalIssue: (i: any) => generateIssueEmailHtml(i)
+  criticalIssue: (i: any) => generateIssueEmailHtml(i),
+  statusChange: (i: { issueCode: string; title: string; status: string; }) => wrap(`<h2 style="margin:0 0 8px">Update on ${i.issueCode}</h2><p style="margin:0;color:#334155">${i.title}</p><p style="margin:8px 0 0;color:#334155">New status: <b>${i.status}</b></p>`)
 };
 
 export const adminAddress = () => ADMIN_EMAIL ?? "mohankrishna111311@gmail.com";
@@ -70,7 +71,6 @@ export async function sendAdminIssueAlert(i: AlertIssue) {
   const critical = i.severity === "CRITICAL";
   const attachments = [];
   
-  // FIX: Process Base64 into a true email attachment mapped to Content-ID (CID)
   if (i.imageUrl && i.imageUrl.startsWith("data:image")) {
     const base64Data = i.imageUrl.split(",")[1];
     attachments.push({
@@ -90,4 +90,12 @@ export async function sendAdminIssueAlert(i: AlertIssue) {
     attachments: attachments,
     type: critical ? "critical-issue" : "new-issue"
   });
+}
+
+export async function sendIssueStatusEmail(to: string, i: { issueCode: string; title: string; status: string; }) {
+  return sendMail({ to, subject: `[FixMyCampus] ${i.issueCode} — ${i.status}`, html: templates.statusChange(i), type: "status-change" });
+}
+
+export async function sendTestEmail(to?: string) {
+  return sendMail({ to: to ?? adminAddress(), subject: "[FixMyCampus] SMTP test email", html: `<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#0f172a"><h2>SMTP is working ✅</h2></div>`, type: "test" });
 }
