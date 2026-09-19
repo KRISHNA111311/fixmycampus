@@ -31,7 +31,8 @@ export async function POST(req: Request) {
     const issue = await createIssue(parsed.data, user);
     const rollNumber = user.email.split('@')[0].toUpperCase();
 
-    sendAdminIssueAlert({
+    // FIX: Await the email function so Vercel does not terminate the process prematurely
+    await sendAdminIssueAlert({
       issueCode: issue.issueCode, 
       title: issue.title,
       description: issue.description,
